@@ -1,4 +1,4 @@
-# Text-Conditioned Informed-Flow Arrival Distributions
+# Arrival Time Prediction Project
 
 ## Overview
 
