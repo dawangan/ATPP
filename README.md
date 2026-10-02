@@ -1,88 +1,85 @@
-#ATPP
-Alternate Trade Processing Prediction
+# Text-Conditioned Informed-Flow Arrival Distributions
 
-# Project 8: Project Summary
+## Overview
+
+This project tests whether the content of corporate disclosures (SEC 8-K filings) predicts how trading activity changes after they are released. It does not forecast price direction. The target is the **inter-arrival time of trades**: how fast trades arrive, and what shape their timing distribution takes.
+
+The motivation is market making. In the Avellaneda–Stoikov (AS) framework, a market maker's main risk is adverse selection, trading against someone who knows more. Informed traders tend to arrive in bursts around information events, so the arrival pattern is a signal of how toxic the incoming flow is. Existing AS extensions estimate the informed-flow probability ξ from order flow, which only reveals informed activity after it has started. Disclosure text is available before that. The most recent AS extension (Barzykin–Bergault–Guéant–Lemmel, 2025) assumes the market maker has no informational advantage. This project relaxes that assumption.
 
 ## Research question
 
-The team is testing whether the **content** of corporate disclosures predicts how trading activity changes after they are released. The question is not where the price goes. It is how fast trades arrive and how they cluster. Clustered, accelerating trading is a sign of informed traders, so a text signal that predicts it ahead of time would let a market maker protect its quotes before toxic flow shows up.
+Do 8-K disclosures change the rate and the distributional shape of trade arrivals, and does how *surprising* a disclosure is predict which change occurs?
 
-## Why market making, not return prediction
+| | Hypothesis | Observable |
+|---|---|---|
+| H1 Level | After an 8-K, expected trade durations shrink, and scheduled and surprise filings differ | Long-run effect γ/(1−β) < 0 |
+| H2 Shape | The shape of the duration distribution changes after an 8-K, more for high-surprise filings | Weibull shape k falls below baseline in event windows |
+| H3 Surprise | A perplexity-based surprise score explains H1 and H2 beyond item-code flags and beyond sentiment | Incremental out-of-sample fit |
+| H4 Regime | Text predicts which arrival-distribution family governs a window | Gating accuracy against held-out family labels |
 
-Most NLP-in-finance work turns sentiment into a return forecast. That space is crowded, and price direction is close to efficient. The team routes text through a different variable: the adverse-selection parameter ξ in the Avellaneda–Stoikov market-making framework, which is the probability that the next trade is informed.
+The decision value (lower adverse-selection cost for a market maker) is the motivation. It is not tested until the final stage.
 
-Existing work estimates ξ from order flow, which only reveals informed activity after it has started. Text is available before that. The most recent extension of AS (Barzykin–Bergault–Guéant–Lemmel, 2025) explicitly assumes the market maker has no informational advantage. The project relaxes that assumption.
+## Approach
 
-## The staged plan
+Each stage is built only if the previous one holds up on real data.
 
-The team builds in three stages. Each stage is only worth starting if the one before it holds up on real data.
+| Stage | Question | Model | Text input |
+|---|---|---|---|
+| 0. Data | Can events and trades be aligned reliably? | none | none |
+| 1. Level | H1 | Log-ACD, exponential QMLE | Scheduled and surprise flags from 8-K item codes |
+| 2. Shape | H2 | Weibull or generalized gamma errors, with k a function of event features | Same flags |
+| 3. Surprise | H3 | Stages 1–2 re-run | Perplexity of the filing given the firm's prior filings |
+| 4. Clustering | Does text set the clustering parameters? | Per-window Hawkes (α, β) regressed on text features | Stage 3 features |
+| 5. Regime | H4 | Mixture of experts over near-Poisson, two Weibull regimes, and Hawkes | Stage 3 features |
+| 6. Decision | Does it lower adverse-selection cost? | AS simulator, swept over lead time and signal reliability | Stage 4 or 5 output as ξ |
 
-- **Version C (current).** A duration model of the gaps between trades, with text-derived event features added as regressors. Question: does text shift arrival timing beyond what trade history and time of day explain?
-- **Version A.** A Hawkes (self-exciting) process whose clustering parameters, the branching ratio and the decay rate, are functions of the text. Question: does text predict the *shape* of the burst, not just its level?
-- **Version B.** A mixture-of-experts model in which the text selects the arrival regime (near-Poisson, two kinds of Weibull, or Hawkes) and estimates its parameters. Family labels come from held-out fits, and predictions are written down before training.
-
-The long-term payoff (Project 1) is to show that a market maker with this signal has lower adverse-selection cost than one relying on order flow alone, measured as a function of lead time and signal reliability.
-
-## Current design of Version C
-
-Several choices changed from the original plan, each for a stated reason:
-
-- **Log-ACD instead of linear ACD.** A negative text effect can push a linear model's expected duration below zero; in logs this cannot happen, and the recursion runs as a fast linear filter.
-- **Two event features instead of one flag.** 8-K item codes split events into *scheduled* (Item 2.02 earnings) and *surprise* (other items). Each gets its own time-decayed feature.
-- **Diurnal adjustment.** Durations are divided by a time-of-day cubic spline with 30-minute knots, fitted on **non-event days only**, together with a trailing 20-session level. Normalizing each day by its own mean would divide out the very effect being tested, so it is avoided.
-- **Long-run effect as the reported quantity.** The team reports γ/(1 − β) rather than γ itself, because simulation showed γ is biased when β is, while the ratio is recovered reliably.
-- **Inference.** Robust (sandwich) Wald tests replace the naive likelihood-ratio test, because the exponential likelihood is misspecified on real durations. Results are also checked against a distribution of at least 200 matched placebo events.
+The bounded thesis scope is Stages 0–3, with Stage 4 if time allows. Stages 5–6 are follow-on work.
 
 ## Data
 
-- **Trades:** about two years of Databento `trades` data for one stock. This replaced the free LOBSTER samples, which stop at June 2012 and so never overlap the period EDGAR's API covers (2015 onward).
+- **Trades:** Databento `trades` schema (Nasdaq TotalView-ITCH, 2018 onward), for a panel of liquid names across sectors.
 - **Events:** SEC EDGAR 8-K acceptance timestamps, to the second.
+- **Why not LOBSTER:** its free samples stop at June 2012, before EDGAR's API coverage begins (2015).
 
-Cleaning steps include:
-- dropping off-exchange TRF prints, whose timestamps record report time rather than execution time;
-- merging simultaneous prints from a single sweeping order into one event;
-- an optional buffer after the opening auction;
-- a diagnostic that resolves whether EDGAR acceptance times are in UTC or ET, using EDGAR's documented 06:00–22:00 ET acceptance window.
+Cleaning rules: off-exchange TRF prints are dropped, since their timestamps record report time rather than execution time. Simultaneous prints from one sweeping order are merged into a single event. An optional buffer after the opening auction is set after inspecting the raw 09:30 bucket. EDGAR acceptance times are checked against the documented 06:00–22:00 ET window to resolve whether they are UTC or ET.
 
-## What has been established
+## Methodology
 
-- **The estimator works.** On synthetic data, the code recovers the true parameters, detects a real text effect, and stays silent in placebo runs where no effect exists.
-- **Power is the binding constraint.** The text effect is identified by the number of *event windows*, not the number of trades. One ticker has roughly 8 earnings releases and 10–30 other 8-Ks over two years. The analytic p-value can look extremely small (1e-77 in one synthetic run) while the placebo randomization p-value sits at its floor of 1/21 with 20 placebos. One ticker is therefore a pilot. A real result needs a panel of 20–50 liquid names with a shared text effect, which gives a few hundred event windows.
-- **Most "scheduled" events land at the open.** Large-cap earnings 8-Ks usually arrive outside market hours and map to 09:30, so the scheduled effect is mostly identified as "the open on earnings mornings vs. the open on ordinary mornings."
+- **Log-ACD** instead of linear ACD, so a negative text effect cannot push expected duration below zero. The recursion also runs as a fast linear filter.
+- **Diurnal adjustment:** durations are divided by a time-of-day cubic spline with 30-minute knots, fitted on non-event days only, plus a trailing 20-session level. Per-day normalization is avoided because it would divide out the effect being tested.
+- **Reported quantity:** the long-run effect γ/(1−β). In simulation, γ is biased when β is, but the ratio is recovered reliably.
+- **Inference:** robust (sandwich) Wald tests, because the exponential likelihood is misspecified on real durations. Results are checked against at least 200 matched placebo events.
+- **Power:** the effect is identified by the number of event windows, not the number of trades. One ticker over two years gives roughly 8 earnings releases and 10–30 other 8-Ks, so a single ticker is a pilot. A real result needs a panel of 20–50 names.
 
-## Novelty, stated honestly
-
-The team considers the current Version C a necessary foundation, not the contribution:
-- Adding exogenous regressors to ACD models dates to the late 1990s.
-- Event flags, even split by item code, are close to existing practice.
-
-The contribution starts with two things:
-- Replacing the event flags with a **surprise measure**: the perplexity of the filing given the firm's disclosure history, which is separate from sentiment.
-- Showing that text conditions the **clustering structure** of informed flow (Versions A and B).
-
-Literature searches found no prior work combining text-derived surprise with duration or Hawkes models in microstructure. That is a negative search result, not proof the gap is empty.
-
-## Pre-registered pass criteria for Version C
+## Pre-registered pass criteria for Stage 1
 
 The specification is fixed before looking at real data: 1800-second half-life, exponential QMLE, 30-minute knots, spline fitted on non-event days, 20-day trailing level. A pass requires all of the following:
 
-1. Both the scheduled and surprise effects are negative.
+1. The scheduled and surprise effects are both negative.
 2. The joint robust Wald test has p < .01.
-3. The placebo randomization p-value is below .01 for each event class, using at least 200 placebos.
+3. The placebo randomization p-value is below .01 for each event class, with at least 200 placebos.
 4. The placebo mean is within one placebo standard deviation of zero.
-5. For intraday events, a scan over event-time offsets peaks within ±2 minutes of the filing time. A peak well before the filing would mean the market reacted before the 8-K.
+5. For intraday events, the log-likelihood over event-time offsets peaks within ±2 minutes of the filing time.
+
+Diagnostics reported but not part of the test: half-life profile, Weibull k, Ljung–Box on residuals, naive likelihood-ratio test.
+
+## Novelty
+
+- **Stage 1 is not novel.** Exogenous regressors in ACD models date to the late 1990s, and item-code event flags are close to existing practice. It is a foundation.
+- **Stage 2** is a modest extension: announcement features shifting the shape of the duration distribution.
+- **Stage 3** is the first likely-novel step. Literature searches found no prior work combining text-derived surprise with duration or point-process models in microstructure. That is a negative search result, not proof that nothing exists.
+- **Stages 4–5** (text-conditioned Hawkes kernel parameters, and text-driven family selection) were not found in the literature searches.
+
+Nearest related work: Barzykin–Bergault–Guéant–Lemmel (2025), Chevalier–Hafsi–Ly Vath (2024, 2025), Lillo et al. (arXiv:1405.6047) on Hawkes processes around macro news, and Jafree–Jain–Firoozye (arXiv:2510.27334) on Hawkes-LOB reinforcement learning without text.
+
+## Status
+
+- The ACD estimator, simulator, and likelihood-ratio test are implemented. Parameter recovery, effect detection, and a silent placebo all pass on synthetic data. These checkpoints ran on the **linear** EACD, so they must be re-run on the log-ACD before any real-data fit.
+- The EDGAR 8-K collector and a duration parser are written.
+- Real-data estimation has not been run yet. Next steps: price and pull the Databento panel, run the timestamp diagnostic, re-validate the log-ACD, then fit the Stage 1 pilot under the pre-registered specification.
 
 ## Open decisions
 
-- **Item taxonomy.** Item 8.01 is a grab bag, and 2.01 is often anticipated. The team plans to read 20–30 of the ticker's filings before fixing the taxonomy.
-- **Panel timing.** Whether to expand to the multi-ticker panel now, or after the single-ticker pilot. This depends partly on Databento's cost for additional symbols.
-- **Open buffer length.** To be set after inspecting the raw 09:30 bucket.
-
-## Next steps
-
-1. Run the timestamp diagnostic and the full single-ticker pilot under the pre-registered specification.
-2. Price out the multi-ticker panel.
-3. Build the perplexity-based surprise feature, the step where the novelty claim begins.
-4. Move to Version A once Version C passes on the panel.
-
-I can turn this into a Doc for sharing with the team or an advisor.
+- **Panel size**, set by Databento pricing for additional symbols.
+- **8-K item taxonomy:** 8.01 is a grab bag and 2.01 is often anticipated, so 20–30 filings per ticker will be read before the split is fixed.
+- **Perplexity model:** a small model trained only on filings before each event date, or a pretrained model with a look-ahead leakage audit. A pretrained LLM has probably seen these filings during pretraining.
