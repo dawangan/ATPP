@@ -98,3 +98,10 @@ shared across machines; the multiplicity count is only as good as the ledger it 
 * `prereg.json` encodes the README's criteria, not the (unseen) PREREGISTRATION.md.
 * Offset scan (criterion 5) is only produced by `run_layer1.py`; `run_real.py` results are `incomplete` on it.
 * Synthetic-data findings validate machinery only. The simulator embeds the model's own functional form.
+* A code-audit defect that is *discarded* (its repro exited 0 or crashed) is "not substantiated", not "false": a true
+  structural fact can be discarded because the repro was badly written. Read the caveats list.
+* In a restricted cloud container `WebFetch` may be blocked by the outbound proxy; the literature lane then degrades to
+  search-only and the harness flags it (`citation_form` concern, no quotes). It fetches normally on an unrestricted machine.
+* Observed cost with the default model: about $0.35-0.40 per task (2 tasks $0.73, 4 tasks incl. literature $1.58).
+  `--max-usd` is a hard stop checked before every call; budget for reviewers, which dominate.
+* The Monte Carlo defaults (16 sims) are coarse; raise `n_sims` in `questions.json` (>= 40) before acting on size numbers.
