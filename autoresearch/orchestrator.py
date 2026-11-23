@@ -143,6 +143,7 @@ class Orchestrator:
         self.run_id = time.strftime("%Y%m%d-%H%M%S")
         self.dir = Path(out_root) / self.run_id
         self.max_parallel, self.max_rounds = max_parallel, max_rounds
+        self.mc_procs = max(1, (os.cpu_count() or 1))
 
     # -- plan ------------------------------------------------------------------
     def plan(self, tasks, only=None):
@@ -206,8 +207,10 @@ class Orchestrator:
             finding.setdefault("caveats", []).append(
                 f"{len(dropped)} claimed defect(s) discarded: repro did not demonstrate the bug "
                 f"({'; '.join(d['file'] + ':' + str(d['line']) + ' - ' + d['repro_result']['why'] for d in dropped)})")
-        return [{"id": "repro_verified", "status": "pass" if keep else "concern",
-                 "detail": f"{len(keep)} defect(s) demonstrated by repro, {len(dropped)} discarded"}]
+        beh = sum(d.get("repro_kind") == "behavioral" for d in keep)
+        return [{"id": "repro_verified", "status": "pass" if beh else "concern",
+                 "detail": f"{beh} behavioral + {len(keep) - beh} structural repro(s) hold, {len(dropped)} discarded. "
+                           "A structural repro shows a code fact (e.g. a call is missing), not that any result changes."}]
 
     def _citation_form(self, finding):
         bad = [c for c in finding.get("citations", []) if not c["url"].startswith("http") or len(c["quote"]) < 20]
@@ -246,6 +249,8 @@ class Orchestrator:
         try:
             if lane == "experiment":
                 params = dict(task.get("params", {}))
+                if task["experiment"] == "mc_calibration":
+                    params.setdefault("procs", getattr(self, "mc_procs", 1))
                 res = run_experiment(task["experiment"], params, tdir / "exp", self.ledger, tid, self.pr)
                 if REGISTRY[task["experiment"]]["family"] == "H1_stage1":
                     verdict = evaluate_stage1(res, self.pr)
@@ -350,6 +355,7 @@ class Orchestrator:
         # Wave 1: Monte Carlo calibration, so wave-2 checks always see current size/coverage evidence (no race).
         wave1 = [t for t in runnable if t.get("experiment") == "mc_calibration"]
         wave2 = [t for t in runnable if t not in wave1]
+        self.mc_procs = max(1, (os.cpu_count() or 1) // max(1, min(self.max_parallel, len(wave1))))
         bundles = []
         for wave in (wave1, wave2):
             with ThreadPoolExecutor(self.max_parallel) as pool:

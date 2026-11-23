@@ -77,9 +77,9 @@ def render_markdown(rep: dict) -> str:
         if fd.get("caveats"):
             a("\n**Caveats**\n" + "\n".join(f"- {c}" for c in fd["caveats"]))
         if fd.get("defects"):
-            a("\n**Defects (repro-verified by the harness)**\n")
+            a("\n**Defects (repro run by the harness)**\n")
             for d in fd["defects"]:
-                a(f"- `{d['file']}:{d['line']}` [{d['severity']}] {d['why']}")
+                a(f"- `{d['file']}:{d['line']}` [{d['severity']}, {d.get('repro_kind', '?')} repro] {d['why']}")
         if fd.get("citations"):
             a("\n**Citations**\n" + "\n".join(f"- {c['claim']} ({c['url']})" for c in fd["citations"]))
         res = f.get("result")
@@ -87,12 +87,12 @@ def render_markdown(rep: dict) -> str:
             a(f"\n_Reproduce:_ ledger seq {res['run']['ledger_seq']}, code `{res['run']['code_hash'][:10]}`, artifacts `{res['run']['outdir']}`\n")
 
     if rep["blocked"]:
-        a("## Blocked / not run\n")
+        a("\n## Blocked / not run\n")
         for b in rep["blocked"]:
             a(f"- **{b['task']['id']}**: {b['why']}" + (f". Unblock: {b['task']['unblock']}" if b["task"].get("unblock") else ""))
         a("")
 
-    a("## Next steps (ranked)\n")
+    a("\n## Next steps (ranked)\n")
     if rep.get("llm_next_steps"):
         a("_Finalizer ranking:_\n")
         for s in sorted(rep["llm_next_steps"], key=lambda s: s["priority"]):

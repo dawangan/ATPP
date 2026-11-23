@@ -9,7 +9,32 @@
       "hypothesis": "method",
       "question": "Is the pre-registered joint robust Wald test correctly sized on data with NO event effect?",
       "experiment": "mc_calibration",
-      "params": {"gamma": {"scheduled": 0.0, "surprise": 0.0}, "n_sims": 16, "seed": 5000}
+      "params": {
+        "gamma": {
+          "scheduled": 0.0,
+          "surprise": 0.0
+        },
+        "n_sims": 16,
+        "seed": 5000
+      }
+    },
+    {
+      "id": "q-method-null-noshock",
+      "status": "active",
+      "priority": 2,
+      "lane": "experiment",
+      "hypothesis": "method",
+      "question": "Diagnostic control: with day-level shocks switched off (level_sd=0), does the robust Wald hold its nominal size? (If not, the oversizing is a machinery bug, not day-shock dependence.)",
+      "experiment": "mc_calibration",
+      "params": {
+        "gamma": {
+          "scheduled": 0.0,
+          "surprise": 0.0
+        },
+        "n_sims": 16,
+        "seed": 5000,
+        "level_sd": 0.0
+      }
     },
     {
       "id": "q-method-recovery",
@@ -19,7 +44,14 @@
       "hypothesis": "method",
       "question": "With a known effect, are the long-run estimates unbiased and do the 95% intervals (robust vs day-clustered SE) cover the truth?",
       "experiment": "mc_calibration",
-      "params": {"gamma": {"scheduled": -0.04, "surprise": -0.03}, "n_sims": 16, "seed": 6000}
+      "params": {
+        "gamma": {
+          "scheduled": -0.04,
+          "surprise": -0.03
+        },
+        "n_sims": 16,
+        "seed": 6000
+      }
     },
     {
       "id": "q-pipeline-synth",
@@ -29,7 +61,10 @@
       "hypothesis": "H1",
       "question": "Does the end-to-end Layer 1 pipeline (scripts/run_layer1.py --simulate) recover a known effect and what does the pre-registered gate say on synthetic data, with 200 placebos?",
       "experiment": "stage1_synthetic",
-      "params": {"placebos": 200, "seed": 0},
+      "params": {
+        "placebos": 200,
+        "seed": 0
+      },
       "replicate": true
     },
     {
@@ -40,7 +75,9 @@
       "hypothesis": "H1",
       "question": "Does the MSFT Stage 1 pilot (results already produced by scripts/run_real.py) meet the pre-registered criteria, and does it survive adversarial review?",
       "experiment": "ingest_results",
-      "params": {"path": "results_msft/results.json"},
+      "params": {
+        "path": "results_msft/results.json"
+      },
       "unblock": "run scripts/run_real.py on the local machine (it writes results_msft/results.json), then set ATPP_DATA_ROOTS to the folder that contains results_msft/ or copy the json into the repo"
     },
     {

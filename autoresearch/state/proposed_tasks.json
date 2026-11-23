@@ -1,4 +1,50 @@
 {
   "note": "Researcher-proposed follow-ups. A human promotes one to questions.json to make it runnable.",
-  "tasks": []
+  "tasks": [
+    {
+      "id": "p-20261123-215437-0",
+      "status": "proposed",
+      "lane": "experiment",
+      "experiment": "mc_calibration with gamma=0 for both classes, larger n_sims, different seed",
+      "question": "Does the day-clustered Wald test hold nominal size with more sims (e.g. several hundred)?",
+      "why": "n=16 cannot distinguish 12.5% from 5% reliably; the cluster rejection rate and coverage need tighter bounds.",
+      "proposed_in": "20261123-215437"
+    },
+    {
+      "id": "p-20261123-215437-1",
+      "status": "proposed",
+      "lane": "experiment",
+      "experiment": "mc_calibration with level_sd varied, still gamma=0",
+      "question": "How does robust and cluster size vary with level_sd (day-level shock size) and with the number of event windows?",
+      "why": "Inference is identified by event windows, not trades; this checks how the SE understatement scales.",
+      "proposed_in": "20261123-215437"
+    },
+    {
+      "id": "p-20261123-215437-2",
+      "status": "proposed",
+      "lane": "code_audit",
+      "experiment": null,
+      "question": "Which inference procedure does the pre-registration specify for criterion (2), and does the code path used for the real data apply day-clustered or placebo-based inference?",
+      "why": "The trade-level robust test is shown oversized here, so criterion (2) must not rely on it alone.",
+      "proposed_in": "20261123-215437"
+    },
+    {
+      "id": "p-20261123-215437-3",
+      "status": "proposed",
+      "lane": "experiment",
+      "experiment": "Run the runner on one real ticker twice (with and without fix_acceptance_tz) and diff events.csv and the gamma estimates. Count this as an extra spec in the forking-paths ledger.",
+      "question": "After wiring fix_acceptance_tz into run_real.py and run_layer1.py (per the TODO text), how many events move by 4-5 h per ticker, and does the sign or significance of either gamma change?",
+      "why": "Quantifies the impact of the A1-5 gap on the reported long-run effects and on the placebo and offset-scan criteria.",
+      "proposed_in": "20261123-215437"
+    },
+    {
+      "id": "p-20261123-215437-4",
+      "status": "proposed",
+      "lane": "code_audit",
+      "experiment": null,
+      "question": "Do pool_events.py, peer_pilot.py and edgar_census.py parse acceptance times via edgar.parse_acceptance, and do they apply the per-filer shift?",
+      "why": "I did not read these scripts, so other runners may share the A1-5 gap.",
+      "proposed_in": "20261123-215437"
+    }
+  ]
 }

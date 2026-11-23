@@ -91,7 +91,8 @@ def size_calibration(res, ctx):
         return _r("size_calibration", "fail",
                   f"under a TRUE NULL the robust joint Wald rejected {mc['reject_robust']}/{mc['n_sims']} times at "
                   f"nominal {mc['nominal']:.0%} (binomial p={mc['binom_p_robust_above_nominal']:.2g}); day-clustered: "
-                  f"{mc['reject_cluster']}/{mc['n_sims']}. The pre-registered Wald criterion is not a valid test here.",
+                  f"{mc['reject_cluster']}/{mc['n_sims']}. Under THIS simulated DGP (day-level shocks, level_sd={mc['level_sd']}) the "
+                  "pre-registered Wald criterion is not a valid test; whether real data has comparable day-level dependence is empirical.",
                   ledger_seq=best["seq"], **{k: mc[k] for k in ("reject_robust", "reject_cluster", "n_sims", "nominal")})
     return _r("size_calibration", "pass", f"robust Wald size {mc['reject_robust']}/{mc['n_sims']} at nominal "
               f"{mc['nominal']:.0%}", ledger_seq=best["seq"])

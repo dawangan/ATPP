@@ -14,5 +14,7 @@ For EACH defect return `file`, `line`, `severity`, `why`, and `repro_code`: stan
 `from l1 import ...` only; no network; nothing written outside the working directory) that fails with an
 `AssertionError` (plain `assert` statements; do NOT catch exceptions or call sys.exit) if and only if the bug is present. The harness runs every repro itself; a repro that exits 0, or that
 crashes for any reason other than an AssertionError, means the defect is unsubstantiated and will be discarded. Do not report style issues, performance, or defects
-already annotated PATCH in the code. Prefer 3 real defects over 15 speculative ones. `claims_effect` is false;
+already annotated PATCH in the code. Prefer BEHAVIOURAL repros (they show a wrong output) over STRUCTURAL ones (an AST/grep fact such as "a call is absent");
+label each with `repro_kind`, and do not rate a structural-only defect `critical` unless you can say which number changes.
+Prefer 3 real defects over 15 speculative ones. `claims_effect` is false;
 `kind` is `defect`.
