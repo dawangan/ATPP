@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": "Encoded from README.md 'Pre-registered pass criteria for Stage 1' and the constants in scripts/pool_events.py. The authoritative PREREGISTRATION.md lives on the local machine and was NOT visible when this file was written: diff the two and edit this file before trusting any verdict.",
+  "explore_start": "2023-09-19",
+  "explore_end": "2025-09-18",
+  "frozen": {
+    "half_life": 1800.0
+  },
+  "spec_keys": ["half_life", "control_days", "open_buffer", "collapse_window_ns", "placebo_mode"],
+  "criteria": {
+    "alpha": 0.01,
+    "min_placebos": 200,
+    "placebo_p_sidedness": "two_sided",
+    "placebo_mean_within_sd": 1.0,
+    "offset_peak_tolerance_s": 120,
+    "kinds": ["scheduled", "surprise"]
+  },
+  "harness": {
+    "calibration_level_sd": 0.08,
+    "size_nominal": 0.05,
+    "size_fail_binom_p": 0.01,
+    "se_inflation_concern": 1.5,
+    "min_events_per_class": 20,
+    "replication_tol_se": 3.0
+  }
+}

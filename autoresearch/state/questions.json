@@ -1,0 +1,63 @@
+{
+  "note": "The human-curated backlog. Only tasks with status 'active' run. Agents may PROPOSE follow-ups (state/proposed_tasks.json) but only a human promotes them here: that is the forking-paths gate. Experiments must be names registered in autoresearch/experiments.py.",
+  "tasks": [
+    {
+      "id": "q-method-null",
+      "status": "active",
+      "priority": 1,
+      "lane": "experiment",
+      "hypothesis": "method",
+      "question": "Is the pre-registered joint robust Wald test correctly sized on data with NO event effect?",
+      "experiment": "mc_calibration",
+      "params": {"gamma": {"scheduled": 0.0, "surprise": 0.0}, "n_sims": 16, "seed": 5000}
+    },
+    {
+      "id": "q-method-recovery",
+      "status": "active",
+      "priority": 2,
+      "lane": "experiment",
+      "hypothesis": "method",
+      "question": "With a known effect, are the long-run estimates unbiased and do the 95% intervals (robust vs day-clustered SE) cover the truth?",
+      "experiment": "mc_calibration",
+      "params": {"gamma": {"scheduled": -0.04, "surprise": -0.03}, "n_sims": 16, "seed": 6000}
+    },
+    {
+      "id": "q-pipeline-synth",
+      "status": "active",
+      "priority": 2,
+      "lane": "experiment",
+      "hypothesis": "H1",
+      "question": "Does the end-to-end Layer 1 pipeline (scripts/run_layer1.py --simulate) recover a known effect and what does the pre-registered gate say on synthetic data, with 200 placebos?",
+      "experiment": "stage1_synthetic",
+      "params": {"placebos": 200, "seed": 0},
+      "replicate": true
+    },
+    {
+      "id": "q-real-msft",
+      "status": "active",
+      "priority": 1,
+      "lane": "experiment",
+      "hypothesis": "H1",
+      "question": "Does the MSFT Stage 1 pilot (results already produced by scripts/run_real.py) meet the pre-registered criteria, and does it survive adversarial review?",
+      "experiment": "ingest_results",
+      "params": {"path": "results_msft/results.json"},
+      "unblock": "run scripts/run_real.py on the local machine (it writes results_msft/results.json), then set ATPP_DATA_ROOTS to the folder that contains results_msft/ or copy the json into the repo"
+    },
+    {
+      "id": "q-lit-novelty",
+      "status": "active",
+      "priority": 3,
+      "lane": "literature",
+      "hypothesis": "novelty",
+      "question": "Is there prior work combining text-derived surprise or disclosure content with duration (ACD) or Hawkes point-process models of trade arrivals? Try hard to falsify the README's novelty claim and update the nearest-related-work list."
+    },
+    {
+      "id": "q-audit-l1",
+      "status": "active",
+      "priority": 2,
+      "lane": "code_audit",
+      "hypothesis": "method",
+      "question": "Audit l1/ and scripts/ for defects that silently change results (no exception raised): look-ahead, wrap-around indices, timezone/DST, window off-by-ones, p-value bookkeeping, and the unresolved TODO A1-5 (per-filer EDGAR timestamp shift not applied in the real-data runners)."
+    }
+  ]
+}
