@@ -203,6 +203,11 @@ class Orchestrator:
             d["repro_result"] = v
             (keep if v["verified"] else dropped).append(d)
         finding["defects"] = keep
+        # Code decides the claim: the LLM's prose may mention defects no repro substantiated.
+        finding["researcher_claim"] = finding.get("claim")
+        listed = "; ".join(f"{d['file']}:{d['line']} [{d['severity']}, {d.get('repro_kind')}]" for d in keep) or "none"
+        finding["claim"] = (f"{len(keep)} defect(s) demonstrated by a harness-run repro: {listed}. {len(dropped)} further "
+                            "claimed defect(s) were NOT substantiated by a repro (that is not the same as false; see caveats).")
         if dropped:
             finding.setdefault("caveats", []).append(
                 f"{len(dropped)} claimed defect(s) discarded: repro did not demonstrate the bug "
@@ -213,7 +218,11 @@ class Orchestrator:
                            "A structural repro shows a code fact (e.g. a call is missing), not that any result changes."}]
 
     def _citation_form(self, finding):
-        bad = [c for c in finding.get("citations", []) if not c["url"].startswith("http") or len(c["quote"]) < 20]
+        cites = finding.get("citations", [])
+        if not cites:
+            return [{"id": "citation_form", "status": "concern",
+                     "detail": "no citation with a fetched URL and verbatim quote: the claim rests on search snippets alone"}]
+        bad = [c for c in cites if not c["url"].startswith("http") or len(c["quote"]) < 20]
         if bad:
             return [{"id": "citation_form", "status": "concern", "detail": f"{len(bad)} citation(s) lack a URL or a substantive verbatim quote"}]
         return [{"id": "citation_form", "status": "pass" if finding.get("citations") else "na", "detail": ""}]

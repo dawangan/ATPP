@@ -55,6 +55,8 @@ def render_markdown(rep: dict) -> str:
             a(f"- {r}")
         if fd:
             a(f"\n**Claim** ({fd['kind']}, confidence {fd['confidence']}, claims_effect={fd['claims_effect']}): {fd['claim']}\n")
+        if fd.get("researcher_claim"):
+            a(f"_Researcher's narrative (NOT verified by code):_ {fd['researcher_claim']}\n")
         if f["verdict"]:
             a(f"**Pre-registered verdict (code): {f['verdict']['overall'].upper()}**\n")
             a("| # | criterion | status | value | note |\n|---|---|---|---|---|")

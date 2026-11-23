@@ -45,6 +45,141 @@
       "question": "Do pool_events.py, peer_pilot.py and edgar_census.py parse acceptance times via edgar.parse_acceptance, and do they apply the per-filer shift?",
       "why": "I did not read these scripts, so other runners may share the A1-5 gap.",
       "proposed_in": "20261123-215437"
+    },
+    {
+      "id": "p-20261123-220016-5",
+      "status": "proposed",
+      "lane": "experiment",
+      "experiment": "mc_calibration with gamma=0 for both classes, n_sims>=200, different seed",
+      "question": "Does the day-cluster (or day-block) Wald test hold nominal size with a larger number of simulations (e.g. >=200)?",
+      "why": "16 sims cannot establish size for the cluster test; 0.125 is inconclusive.",
+      "proposed_in": "20261123-220016"
+    },
+    {
+      "id": "p-20261123-220016-6",
+      "status": "proposed",
+      "lane": "experiment",
+      "experiment": "mc_calibration null runs with level_sd varied (including 0)",
+      "question": "Is placebo randomization (criterion 3) correctly sized under the null with day-level shocks, and how do rejection rates vary with level_sd?",
+      "why": "Pre-registered gate relies on placebo p-values, which respect day-level dependence by construction if placebos are assigned at the event-window level.",
+      "proposed_in": "20261123-220016"
+    },
+    {
+      "id": "p-20261123-220016-7",
+      "status": "proposed",
+      "lane": "code_audit",
+      "experiment": null,
+      "question": "Check how the pre-registered joint Wald statistic is computed in the repo (trade-level vs day-clustered covariance) and whether the registered protocol allows a clustered correction before holdout use.",
+      "why": "If the registered criterion 2 uses the oversized robust test, the gate is anti-conservative; any change must be a documented protocol amendment, not post hoc tuning.",
+      "proposed_in": "20261123-220016"
+    },
+    {
+      "id": "p-20261123-220016-8",
+      "status": "proposed",
+      "lane": "experiment",
+      "experiment": "mc_calibration with gamma=0, level_sd=0, n_sims>=200",
+      "question": "Re-run the same null, level_sd=0 control with a much larger n_sims (e.g. >=200) so the rejection rate has a usable confidence interval.",
+      "why": "16 sims cannot separate 5% from 15% size, so the machinery-bug question is still open.",
+      "proposed_in": "20261123-220016"
+    },
+    {
+      "id": "p-20261123-220016-9",
+      "status": "proposed",
+      "lane": "experiment",
+      "experiment": "mc_calibration with gamma=0, level_sd>0, same seeds",
+      "question": "Run the paired contrast with the same seeds and level_sd>0, comparing robust SE to the empirical SD, to quantify the day-shock inflation relative to this control.",
+      "why": "The ratio of mean SE to empirical SD (about 1.0 here) versus the shocked case is the direct evidence for the day-shock explanation.",
+      "proposed_in": "20261123-220016"
+    },
+    {
+      "id": "p-20261123-220016-10",
+      "status": "proposed",
+      "lane": "code_audit",
+      "experiment": null,
+      "question": "Check how the cluster-by-day covariance estimator treats the small number of event windows, for example whether a small-sample correction is applied.",
+      "why": "Cluster SE for scheduled is slightly below the empirical SD, and the cluster rate is the higher of the two.",
+      "proposed_in": "20261123-220016"
+    },
+    {
+      "id": "p-20261123-220016-11",
+      "status": "proposed",
+      "lane": "experiment",
+      "experiment": null,
+      "question": "Apply TODO A1-5 in run_real.py and run_layer1.py, then compare eff_ns, event counts and gamma against the current run for the same ticker.",
+      "why": "Quantifies how much the missing per-filer shift changes the headline result.",
+      "proposed_in": "20261123-220016"
+    },
+    {
+      "id": "p-20261123-220016-12",
+      "status": "proposed",
+      "lane": "experiment",
+      "experiment": null,
+      "question": "How many census filers have an all-pre-market filing pattern, so that decide_shift in auto mode cannot detect a shift? Compare auto against mode='shifted' on the 18 Oct census.",
+      "why": "Shows whether the false-negative case in edgar.decide_shift occurs on real filers.",
+      "proposed_in": "20261123-220016"
+    },
+    {
+      "id": "p-20261123-220016-13",
+      "status": "proposed",
+      "lane": "code_audit",
+      "experiment": null,
+      "question": "Check scripts/pull_databento.py, fetch_8k_pages.py, peer_pilot.py and monte_carlo_bias.py, plus the autoresearch/ harness, for silent defects.",
+      "why": "These were skimmed or outside this audit's reading budget.",
+      "proposed_in": "20261123-220016"
+    },
+    {
+      "id": "p-20261123-220016-14",
+      "status": "proposed",
+      "lane": "literature",
+      "experiment": null,
+      "question": "Re-run the fetches for arXiv:1405.6047, Yang et al. (2018, Quantitative Finance), and the Stockholm ACD-news paper once the proxy allows them, and capture verbatim quotes and dates.",
+      "why": "Citations need fetched pages and exact quotes. Rambaldi et al. and Yang et al. are the closest disconfirming candidates.",
+      "proposed_in": "20261123-220016"
+    },
+    {
+      "id": "p-20261123-220016-15",
+      "status": "proposed",
+      "lane": "literature",
+      "experiment": null,
+      "question": "Search SSRN, RePEc and Google Scholar for 'ACD' or 'duration' with 'earnings announcement', '8-K', 'press release', 'sentiment' or 'textual', and for Bowsher, Engle\u2013Russell and Dufour-type news-ACD papers.",
+      "why": "The classic ACD-with-announcements literature may predate and overlap Stage 1 and Stage 3 (text content). This search was not done.",
+      "proposed_in": "20261123-220016"
+    },
+    {
+      "id": "p-20261123-220016-16",
+      "status": "proposed",
+      "lane": "literature",
+      "experiment": null,
+      "question": "Read Rambaldi\u2013Pennesi\u2013Lillo in full, specifically how the surprise dependence of the news kernel was parameterized and tested.",
+      "why": "The method could be adopted or benchmarked, for example a non-causal pre-event kernel as a placebo or pre-trend check. It also bears on criterion (5), the offset-scan peak.",
+      "proposed_in": "20261123-220016"
+    },
+    {
+      "id": "p-20261123-220016-17",
+      "status": "proposed",
+      "lane": "literature",
+      "experiment": null,
+      "question": "Read the Yang et al. 2018 multivariate Hawkes sentiment paper and check how it handles news timestamps and look-ahead.",
+      "why": "It is the nearest text-plus-point-process work and could force a softer novelty claim.",
+      "proposed_in": "20261123-220016"
+    },
+    {
+      "id": "p-20261123-220016-18",
+      "status": "proposed",
+      "lane": "literature",
+      "experiment": null,
+      "question": "Check whether Barzykin\u2013Bergault\u2013Gu\u00e9ant\u2013Lemmel (2025), Chevalier\u2013Hafsi\u2013Ly Vath (2024, 2025) and Jafree\u2013Jain\u2013Firoozye (arXiv:2510.27334) exist as cited, and whether any use text. Add the AEA 2020 EDGAR-timing and NBER f81063 papers as related work on 8-K timestamps.",
+      "why": "I could not confirm the first two entries of the README's nearest-work list. The EDGAR-timing papers bear directly on the timing hazard.",
+      "proposed_in": "20261123-220016"
+    },
+    {
+      "id": "p-20261123-220016-19",
+      "status": "proposed",
+      "lane": "code_audit",
+      "experiment": null,
+      "question": "Soften README.md:70 from 'first likely-novel step' to wording such as 'none found in the searches listed', and name the Rambaldi (surprise kernels) and Yang (sentiment Hawkes) precedents.",
+      "why": "The claim is stronger than the evidence, and partial counterexamples exist.",
+      "proposed_in": "20261123-220016"
     }
   ]
 }

@@ -188,3 +188,33 @@ def test_normalize_handles_run_layer1_and_run_real_shapes():
     assert a["placebo"]["scheduled"]["p"] == 0.04 and b["placebo"]["scheduled"]["p"] == 0.01
     assert a["event_counts"] == {"scheduled": 10, "surprise": 7} and b["event_counts"] == {"scheduled": 12}
     assert b["spec"]["placebo_mode"] == "nuisance"
+
+
+# ------------------------------------------------------------------ code decides the audit / literature claims
+def _orch(tmp_path):
+    from autoresearch.llm import NullExecutor
+    from autoresearch.orchestrator import Orchestrator
+    return Orchestrator(NullExecutor(), Ledger(tmp_path / "l.jsonl"), PR, tmp_path)
+
+
+def test_audit_claim_is_rewritten_by_code_to_only_substantiated_defects(tmp_path):
+    f = {"claim": "four defects incl. a made-up one", "caveats": [], "defects": [
+        {"file": "a.py", "line": 1, "severity": "major", "why": "x", "repro_kind": "behavioral", "repro_code": "assert 1 == 2"},
+        {"file": "b.py", "line": 2, "severity": "critical", "why": "y", "repro_kind": "structural", "repro_code": "assert True"}]}
+    checks = _orch(tmp_path)._verify_defects(f, tmp_path)
+    assert [d["file"] for d in f["defects"]] == ["a.py"]
+    assert "a.py:1" in f["claim"] and "b.py" not in f["claim"] and "1 further" in f["claim"]
+    assert f["researcher_claim"] == "four defects incl. a made-up one"
+    assert checks[0]["status"] == "pass"
+
+
+def test_structural_only_repro_is_a_concern_not_a_pass(tmp_path):
+    f = {"claim": "c", "caveats": [], "defects": [
+        {"file": "a.py", "line": 1, "severity": "major", "why": "x", "repro_kind": "structural", "repro_code": "assert 1 == 2"}]}
+    assert _orch(tmp_path)._verify_defects(f, tmp_path)[0]["status"] == "concern"
+
+
+def test_literature_without_fetched_quotes_is_a_concern(tmp_path):
+    o = _orch(tmp_path)
+    assert o._citation_form({"citations": []})[0]["status"] == "concern"
+    assert o._citation_form({"citations": [{"claim": "c", "url": "https://x.org", "quote": "a verbatim quote that is long enough"}]})[0]["status"] == "pass"
